@@ -36,4 +36,35 @@ router.delete("/deleteproduct/:id", (req, res) => {
     });
 });
 
+router.get("/getuser/:id", (req, res) => {
+  const id = req.params.id;
+  usermodel
+    .findById({ _id: id })
+    .then((result) => {
+      res.json(result);
+    })
+    .catch((err) => {
+      res.json(err);
+    });
+});
+
+router.put("/updateuser/:id", (req, res) => {
+  const id = req.params.id;
+  usermodel
+    .findByIdAndUpdate(
+      { _id: id },
+      {
+        productname: req.body.updateproductname,
+        productdescription: req.body.updateproductDescription,
+        price: req.body.updateprice,
+      }
+    )
+    .then((result) => {
+      res.json(result);
+    })
+    .catch((err) => {
+      res.json;
+    });
+});
+
 module.exports = router;
