@@ -3,14 +3,16 @@ const router = express.Router();
 const usermodel = require("../model/Modelschema");
 
 router.get("/", (req, res) => {
-  usermodel
-    .find({})
-    .then((result) => {
-      res.json(result);
-    })
-    .catch((err) => {
-      res.json(err);
-    });
+  const keyword = req.query.keyword;
+  const query = keyword ? { productname: { $regex: keyword, $ : 'i' } } : {};
+
+  usermodel.find(query)
+      .then((result) => {
+          res.json(result);
+      })
+      .catch((err) => {
+          res.status(500).json(err); 
+      });
 });
 
 router.post("/Addproduct", (req, res) => {
@@ -33,6 +35,37 @@ router.delete("/deleteproduct/:id", (req, res) => {
     })
     .catch((err) => {
       res.json(err);
+    });
+});
+
+router.get("/getuser/:id", (req, res) => {
+  const id = req.params.id;
+  usermodel
+    .findById({ _id: id })
+    .then((result) => {
+      res.json(result);
+    })
+    .catch((err) => {
+      res.json(err);
+    });
+});
+
+router.put("/updateuser/:id", (req, res) => {
+  const id = req.params.id;
+  usermodel
+    .findByIdAndUpdate(
+      { _id: id },
+      {
+        productname: req.body.updateproductname,
+        productdescription: req.body.updateproductDescription,
+        price: req.body.updateprice,
+      }
+    )
+    .then((result) => {
+      res.json(result);
+    })
+    .catch((err) => {
+      res.json;
     });
 });
 
