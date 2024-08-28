@@ -4,16 +4,19 @@ const usermodel = require("../model/Modelschema");
 
 router.get("/", (req, res) => {
   const keyword = req.query.keyword;
-  const query = keyword ? { productname: { $regex: keyword, $ : 'i' } } : {};
+  const query = keyword ? { productname: { $regex: keyword, $options: 'i' } } : {};
 
   usermodel.find(query)
-      .then((result) => {
-          res.json(result);
-      })
-      .catch((err) => {
-          res.status(500).json(err); 
-      });
+    .then((result) => {
+      console.log("Query result:", result);
+      res.json(result);
+    })
+    .catch((err) => {
+      console.error("Query error:", err); 
+      res.status(500).json({ error: err.message }); 
+    });
 });
+
 
 router.post("/Addproduct", (req, res) => {
   usermodel
