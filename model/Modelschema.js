@@ -1,12 +1,16 @@
 const mongoose = require("mongoose");
 
 const userschema = new mongoose.Schema({
-    productname:String,
-    productdescription:String,
-    price:Number,
-    ImageURL:String,
+    productname: String,
+    productdescription: String,
+    price: Number,
+    ImageURL: String,
+    category: { type: String, default: 'Uncategorized' },
+    stock: { type: Number, default: 0 },
+    rating: { type: Number, default: 0 },
+    reviewCount: { type: Number, default: 0 }
 })
 
-const usermodel = mongoose.model("productlist",userschema);
+const usermodel = mongoose.model("productlist", userschema);
 
 module.exports = usermodel;

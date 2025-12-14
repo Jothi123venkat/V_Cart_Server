@@ -53,23 +53,32 @@ router.get("/getuser/:id", (req, res) => {
     });
 });
 
-router.put("/updateuser/:id", (req, res) => {
+router.put("/updateuser/:id", async (req, res) => {
   const id = req.params.id;
-  usermodel
-    .findByIdAndUpdate(
+  console.log('Update request for product:', id, 'with data:', req.body);
+  
+  try {
+    const result = await usermodel.findByIdAndUpdate(
       { _id: id },
       {
-        productname: req.body.updateproductname,
-        productdescription: req.body.updateproductDescription,
-        price: req.body.updateprice,
-      }
-    )
-    .then((result) => {
-      res.json(result);
-    })
-    .catch((err) => {
-      res.json;
-    });
+        productname: req.body.productname,
+        productdescription: req.body.productdescription,
+        price: req.body.price,
+        stock: req.body.stock,
+        category: req.body.category,
+        ImageURL: req.body.ImageURL,
+        rating: req.body.rating,
+        reviewCount: req.body.reviewCount
+      },
+      { new: true } // Return updated document
+    );
+    
+    console.log('Product updated successfully:', result);
+    res.json(result);
+  } catch (err) {
+    console.error('Update error:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;

@@ -2,6 +2,9 @@ const express = require("express");
 const mongoose = require("mongoose");
 const router = require("./routes/routing");
 const cartrouter = require("./routes/Cartrouting")
+const authRouter = require("./routes/authRoutes");
+const userRouter = require("./routes/userRoutes");
+const orderRouter = require("./routes/orderRoutes");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const port = 5000;
@@ -22,6 +25,9 @@ app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
 // Use the router middleware
 app.use("/", router);
 app.use("/cart", cartrouter);
+app.use("/api/auth", authRouter);
+app.use("/api", userRouter);
+app.use("/api/orders", orderRouter);
 
 
 // Connect to MongoDB
