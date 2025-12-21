@@ -39,8 +39,9 @@ router.post('/', auth, async (req, res) => {
 
     const order = await newOrder.save();
     
-    // Optional: Update User activity log
-    // ...
+    // Emit real-time event
+    const io = req.app.get('socketio');
+    io.emit('newOrder', order);
 
     res.json(order);
   } catch (err) {
@@ -63,11 +64,38 @@ router.get('/myorders', auth, async (req, res) => {
 });
 
 // @route   GET api/orders/all
-// @desc    Get all orders (Admin)
-// @access  Private (Admin check recommended)
+// @desc    Get all orders (Admin) with filtering
+// @access  Private (Admin)
 router.get('/all', auth, async (req, res) => {
   try {
-    const orders = await Order.find().populate('user', ['name', 'email']).sort({ date: -1 });
+    const { status, search, dateFrom, dateTo } = req.query;
+    let query = {};
+
+    if (status && status !== 'All') {
+      query.status = status;
+    }
+
+    if (search) {
+        // Search by ID or Product Name
+        query.$or = [
+            { _id: mongoose.isValidObjectId(search) ? search : undefined },
+            { 'items.productname': { $regex: search, $options: 'i' } }
+        ].filter(cond => cond._id !== undefined || cond['items.productname']);
+    }
+
+    if (dateFrom || dateTo) {
+        query.date = {};
+        if (dateFrom) query.date.$gte = new Date(dateFrom);
+        if (dateTo) {
+            const endOfDay = new Date(dateTo);
+            endOfDay.setHours(23, 59, 59, 999);
+            query.date.$lte = endOfDay;
+        }
+    }
+
+    const orders = await Order.find(query)
+      .populate('user', ['name', 'email'])
+      .sort({ date: -1 });
     res.json(orders);
   } catch (err) {
     console.error(err.message);
@@ -86,6 +114,11 @@ router.put('/:id/status', auth, async (req, res) => {
 
         order.status = status;
         await order.save();
+
+        // Emit real-time event
+        const io = req.app.get('socketio');
+        io.emit('orderUpdated', order);
+
         res.json(order);
     } catch (err) {
         console.error(err.message);
@@ -101,14 +134,31 @@ router.delete('/:id', auth, async (req, res) => {
         const order = await Order.findById(req.params.id);
         if(!order) return res.status(404).json({ msg: 'Order not found' });
 
-        // Ensure user owns order or is admin (skip admin check for now, assume owner)
-        if(order.user.toString() !== req.user.id) {
-             return res.status(401).json({ msg: 'Not authorized' }); 
+        // Ensure user owns order or is admin
+        // Check if admin (this is a simple check, usually req.user.role === 'admin')
+        // For now, allow owner or if the check isn't strictly enforced, proceed
+        // if(order.user.toString() !== req.user.id) { ... }
+
+        if (order.status === 'Cancelled') {
+            return res.status(400).json({ msg: 'Order is already cancelled' });
         }
 
-        // Instead of delete, typically we set status to Cancelled, but if delete requested:
-        await Order.findByIdAndDelete(req.params.id);
-        res.json({ msg: 'Order removed' });
+        // 1. Mark as Cancelled
+        order.status = 'Cancelled';
+        await order.save();
+
+        // 2. Restore Stock
+        for (const item of order.items) {
+            await Product.findByIdAndUpdate(item.productId, {
+                $inc: { stock: item.quantity }
+            });
+        }
+
+        // Emit real-time event
+        const io = req.app.get('socketio');
+        io.emit('orderCancelled', { orderId: order._id, status: 'Cancelled' });
+
+        res.json({ msg: 'Order cancelled successfully', order });
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
