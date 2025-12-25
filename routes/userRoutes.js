@@ -16,6 +16,18 @@ router.get('/', auth, async (req, res) => {
     }
 });
 
+// Get single user by ID (Admin only)
+router.get('/:id', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id).select('-password');
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        res.json(user);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
 // Create User (Admin only)
 router.post('/', auth, async (req, res) => {
     const { name, email, password, role } = req.body;

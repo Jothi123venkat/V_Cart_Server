@@ -63,6 +63,19 @@ router.get('/myorders', auth, async (req, res) => {
   }
 });
 
+// @route   GET api/orders/user/:userId
+// @desc    Get orders for a specific user (Admin)
+// @access  Private (Admin)
+router.get('/user/:userId', auth, async (req, res) => {
+    try {
+        const orders = await Order.find({ user: req.params.userId }).sort({ date: -1 });
+        res.json(orders);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 // @route   GET api/orders/all
 // @desc    Get all orders (Admin) with filtering
 // @access  Private (Admin)
