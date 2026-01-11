@@ -57,6 +57,7 @@ app.use("/api/notifications", notificationRouter);
 app.use("/api/wishlist", wishlistRouter);
 app.use("/api/profile", profileRouter);
 app.use("/api/address", profileRouter);
+app.use("/api/config", require("./routes/siteConfigRoutes"));
 app.use("/api", seedRoutes);
 
 // Socket.io connection logic

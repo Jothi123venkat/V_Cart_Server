@@ -67,7 +67,39 @@ cartrouter.post("/add", auth, async (req, res) => {
   }
 });
 
-// @route   DELETE api/cart/:productId
+// @route   PUT api/cart/update
+// @desc    Update item quantity in cart
+// @access  Private
+cartrouter.put("/update", auth, async (req, res) => {
+  const { productId, quantity } = req.body;
+
+  try {
+    let cart = await Cart.findOne({ user: req.user.id });
+    if (!cart) return res.status(404).json({ msg: "Cart not found" });
+
+    const itemIndex = cart.items.findIndex(p => p.product.toString() === productId);
+
+    if (itemIndex > -1) {
+      if (quantity <= 0) {
+        // Remove item if quantity is 0 or less
+        cart.items.splice(itemIndex, 1);
+      } else {
+        cart.items[itemIndex].quantity = quantity;
+      }
+      await cart.save();
+      
+      // Return updated list
+      cart = await Cart.findOne({ user: req.user.id }).populate('items.product');
+      return res.json(cart.items);
+    } else {
+      return res.status(404).json({ msg: "Item not found in cart" });
+    }
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+});
+
 // @desc    Remove item from cart
 // @access  Private
 cartrouter.delete("/:productId", auth, async (req, res) => {
