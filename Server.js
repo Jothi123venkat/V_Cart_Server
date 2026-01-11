@@ -12,6 +12,8 @@ const categoryRoutes = require("./routes/categoryRoutes");
 const couponRouter = require("./routes/couponRoutes");
 const ticketRouter = require("./routes/ticketRoutes");
 const notificationRouter = require("./routes/notificationRoutes");
+const wishlistRouter = require("./routes/wishlistRoutes");
+const profileRouter = require("./routes/profileRoutes");
 
 dotenv.config();
 
@@ -52,6 +54,9 @@ app.use("/api/orders", orderRouter);
 app.use("/api/coupons", couponRouter);
 app.use("/api/tickets", ticketRouter);
 app.use("/api/notifications", notificationRouter);
+app.use("/api/wishlist", wishlistRouter);
+app.use("/api/profile", profileRouter);
+app.use("/api/address", profileRouter);
 app.use("/api", seedRoutes);
 
 // Socket.io connection logic

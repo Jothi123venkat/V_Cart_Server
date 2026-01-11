@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema({
   }],
   wishlist: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product' // Assuming your product model is named 'Product' or 'modelschema'
+    ref: 'productlist' // Must match the model name in Modelschema.js
   }],
   notifications: {
     email: { type: Boolean, default: true },
