@@ -5,6 +5,8 @@ const auth = require('../middleware/authMiddleware');
 
 const Product = require('../model/Modelschema');
 
+const { createInvoiceFromOrder } = require('../utils/invoiceUtils');
+
 // @route   POST api/orders
 // @desc    Create a new order
 // @access  Private
@@ -38,6 +40,14 @@ router.post('/', auth, async (req, res) => {
     });
 
     const order = await newOrder.save();
+    
+    // 3. Auto-Generate Invoice
+    try {
+        await createInvoiceFromOrder(order);
+    } catch (invoiceErr) {
+        console.error("Auto-invoice generation failed:", invoiceErr);
+        // Don't fail the order if invoice fails, just log it
+    }
     
     // Emit real-time event
     const io = req.app.get('socketio');
@@ -89,11 +99,10 @@ router.get('/all', auth, async (req, res) => {
     }
 
     if (search) {
-        // Search by ID or Product Name
         query.$or = [
-            { _id: mongoose.isValidObjectId(search) ? search : undefined },
+            { $expr: { $regexMatch: { input: { $toString: "$_id" }, regex: search, options: "i" } } },
             { 'items.productname': { $regex: search, $options: 'i' } }
-        ].filter(cond => cond._id !== undefined || cond['items.productname']);
+        ];
     }
 
     if (dateFrom || dateTo) {
@@ -172,6 +181,39 @@ router.delete('/:id', auth, async (req, res) => {
         io.emit('orderCancelled', { orderId: order._id, status: 'Cancelled' });
 
         res.json({ msg: 'Order cancelled successfully', order });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   PUT api/orders/:id/return
+// @desc    Request a return for an order
+// @access  Private
+router.put('/:id/return', auth, async (req, res) => {
+    const { reason } = req.body;
+    try {
+        let order = await Order.findById(req.params.id);
+        if(!order) return res.status(404).json({ msg: 'Order not found' });
+        
+        // Ensure order belongs to user
+        if (order.user.toString() !== req.user.id) {
+            return res.status(401).json({ msg: 'User not authorized' });
+        }
+
+        if (order.status !== 'Delivered') {
+            return res.status(400).json({ msg: 'Only delivered orders can be returned' });
+        }
+
+        order.status = 'Return Requested';
+        order.returnReason = reason;
+        await order.save();
+
+        // Emit real-time event
+        const io = req.app.get('socketio');
+        io.emit('orderUpdated', order);
+
+        res.json(order);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');

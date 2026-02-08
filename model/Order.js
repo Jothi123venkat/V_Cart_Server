@@ -13,7 +13,11 @@ const orderSchema = new mongoose.Schema({
     quantity: { type: Number, default: 1 },
     productId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Product' // Adjust if your model name is different
+      ref: 'productlist'
+    },
+    isReviewed: {
+      type: Boolean,
+      default: false
     }
   }],
   total: {
@@ -30,9 +34,10 @@ const orderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Processing', 'Shipped', 'Delivered', 'Cancelled'],
+    enum: ['Processing', 'Shipped', 'Delivered', 'Cancelled', 'Return Requested', 'Returned', 'Return Rejected'],
     default: 'Processing'
   },
+  returnReason: String,
   date: {
     type: Date,
     default: Date.now

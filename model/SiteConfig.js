@@ -37,6 +37,54 @@ const siteConfigSchema = new mongoose.Schema({
   contactPhone: {
       type: String,
       default: '+1 234 567 890'
+  },
+  
+  // New Sections
+  curatedCollections: {
+      title: { type: String, default: 'The Collection' },
+      subtitle: { type: String, default: 'CURATED SELECTION' },
+      items: [{
+          title: String,
+          image: String, // URL
+          link: String
+      }]
+  },
+  
+  flashSale: {
+      title: { type: String, default: "Don't Miss Out!" },
+      subtitle: { type: String, default: "Limited time offers - Grab them before they're gone!" },
+      startTime: Date,
+      endTime: Date,
+      isActive: { type: Boolean, default: true }
+  },
+  
+  invoiceSettings: {
+      gstin: { type: String, default: '' },
+      taxRate: { type: Number, default: 18 },
+      termsAndConditions: { type: String, default: '1. Goods once sold will not be taken back.\n2. Interest @ 18% p.a. will be charged if the bill is not paid within the due date.\n3. Subject to local jurisdiction.' },
+      startInvoiceNumber: { type: Number, default: 1 },
+      prefix: { type: String, default: 'INV' }, // e.g., INV-2024-001
+      address: { type: String, default: '' }, // Store address for the invoice
+      storeName: { type: String, default: 'V-CART' },
+      bankDetails: {
+          bankName: { type: String, default: '' },
+          accountNo: { type: String, default: '' },
+          ifscCode: { type: String, default: '' },
+          branch: { type: String, default: '' }
+      },
+      // Template Configuration
+      headerTitle: { type: String, default: 'TAX INVOICE' },
+      customFields: [{
+          label: { type: String, required: true },
+          value: { type: String, default: '' },
+          type: { type: String, enum: ['text', 'number', 'date', 'boolean'], default: 'text' },
+          section: { type: String, enum: ['header', 'footer', 'billDetails'], default: 'header' }
+      }],
+      tableColumns: [{
+          key: String,
+          label: String,
+          active: Boolean
+      }]
   }
 }, { timestamps: true });
 

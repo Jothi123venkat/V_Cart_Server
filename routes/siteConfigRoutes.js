@@ -49,7 +49,9 @@ router.put('/', auth, async (req, res) => {
             heroImage,
             contactEmail,
             contactPhone,
-            footerText
+            footerText,
+            curatedCollections,
+            flashSale
         } = req.body;
 
         let config = await SiteConfig.findOne();
@@ -66,6 +68,10 @@ router.put('/', auth, async (req, res) => {
         config.contactEmail = contactEmail;
         config.contactPhone = contactPhone;
         config.footerText = footerText;
+
+        // Update new sections if provided
+        if (curatedCollections) config.curatedCollections = curatedCollections;
+        if (flashSale) config.flashSale = flashSale;
 
         await config.save();
         res.json(config);
